@@ -35,7 +35,7 @@ export interface MetricSummary {
   p999: number;
 }
 
-export interface MetricHistogram extends MetricSummary {}
+export type MetricHistogram = MetricSummary;
 
 export interface IntermediateResult {
   counters: {

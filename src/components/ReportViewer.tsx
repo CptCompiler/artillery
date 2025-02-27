@@ -1,5 +1,5 @@
 import { ArrowPathIcon } from '@heroicons/react/24/solid';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Area, AreaChart } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, Area, AreaChart } from 'recharts';
 import type { ArtilleryReport } from '@/types/artillery';
 
 // Color palette matching Artillery Cloud
@@ -26,8 +26,18 @@ interface ReportViewerProps {
   onReset: () => void;
 }
 
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    name: string;
+    value: number;
+    color: string;
+  }>;
+  label?: string;
+}
+
 export default function ReportViewer({ report, onReset }: ReportViewerProps) {
-  const responseTimeData = report.intermediate.map((result, index) => {
+  const responseTimeData = report.intermediate.map((result) => {
     const responseTime = result.summaries?.['http.response_time'];
     return {
       timestamp: new Date(parseInt(result.period)).toLocaleTimeString(),
@@ -39,7 +49,7 @@ export default function ReportViewer({ report, onReset }: ReportViewerProps) {
     };
   }).filter(data => data.max > 0);
 
-  const requestsData = report.intermediate.map((result, index) => {
+  const requestsData = report.intermediate.map((result) => {
     return {
       timestamp: new Date(parseInt(result.period)).toLocaleTimeString(),
       requests: result.counters?.['http.requests'] || 0,
@@ -58,29 +68,17 @@ export default function ReportViewer({ report, onReset }: ReportViewerProps) {
       count: report.aggregate.counters[key]
     }));
 
-  // Get endpoint-specific metrics
-  const endpointMetrics = Object.keys(report.aggregate.summaries)
-    .filter(key => key.startsWith('plugins.metrics-by-endpoint.'))
-    .map(key => {
-      const endpoint = key.replace('plugins.metrics-by-endpoint.response_time.', '');
-      const metrics = report.aggregate.summaries[key];
-      return {
-        endpoint,
-        ...metrics
-      };
-    });
-
   // Calculate test duration
   const testDuration = (report.aggregate.lastMetricAt - report.aggregate.firstMetricAt) / 1000;
 
   // Format for the tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-[#242424] border border-[#333333] rounded-lg p-3 shadow-lg">
           <p className="text-sm text-white mb-2">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
+          {payload.map((entry, i) => (
+            <p key={i} className="text-sm" style={{ color: entry.color }}>
               {entry.name}: {entry.value.toFixed(2)}
             </p>
           ))}
@@ -235,38 +233,6 @@ export default function ReportViewer({ report, onReset }: ReportViewerProps) {
             </ResponsiveContainer>
           </div>
         </div>
-
-        {endpointMetrics.length > 0 && (
-          <div className="card p-4 md:col-span-3">
-            <h3 className="text-lg font-medium mb-4 text-white">Endpoint Performance</h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-[#333333]">
-                <thead>
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Endpoint</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Mean</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Median</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">95th %</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">99th %</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Max</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#333333]">
-                  {endpointMetrics.map((metric, idx) => (
-                    <tr key={idx} className="hover:bg-[#2a2a2a]">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{metric.endpoint}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{(metric.mean / 1000).toFixed(2)}s</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{(metric.median / 1000).toFixed(2)}s</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{(metric.p95 / 1000).toFixed(2)}s</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{(metric.p99 / 1000).toFixed(2)}s</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{(metric.max / 1000).toFixed(2)}s</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
