@@ -1,3 +1,4 @@
+@import "tailwindcss";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -46,6 +47,10 @@ body {
 
   .metric-value {
     @apply text-xl font-semibold text-white;
+  }
+
+  .rounded-lg {
+    border-radius: 0.5rem;
   }
 }
 

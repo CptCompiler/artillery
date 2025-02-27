@@ -37,15 +37,18 @@ interface TooltipProps {
 }
 
 export default function ReportViewer({ report, onReset }: ReportViewerProps) {
+  // Calculate test duration
+  const testDuration = (report.aggregate.lastMetricAt - report.aggregate.firstMetricAt) / (1000 * 60);
+
   const responseTimeData = report.intermediate.map((result) => {
     const responseTime = result.summaries?.['http.response_time'];
     return {
       timestamp: new Date(parseInt(result.period)).toLocaleTimeString(),
-      min: responseTime?.min || 0,
-      mean: responseTime?.mean || 0,
-      max: responseTime?.max || 0,
-      p95: responseTime?.p95 || 0,
-      p99: responseTime?.p99 || 0,
+      min: (responseTime?.min || 0) / 1000,
+      mean: (responseTime?.mean || 0) / 1000,
+      max: (responseTime?.max || 0) / 1000,
+      p95: (responseTime?.p95 || 0) / 1000,
+      p99: (responseTime?.p99 || 0) / 1000,
     };
   }).filter(data => data.max > 0);
 
@@ -68,9 +71,6 @@ export default function ReportViewer({ report, onReset }: ReportViewerProps) {
       count: report.aggregate.counters[key]
     }));
 
-  // Calculate test duration
-  const testDuration = (report.aggregate.lastMetricAt - report.aggregate.firstMetricAt) / 1000;
-
   // Format for the tooltip
   const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
@@ -79,7 +79,7 @@ export default function ReportViewer({ report, onReset }: ReportViewerProps) {
           <p className="text-sm text-white mb-2">{label}</p>
           {payload.map((entry, i) => (
             <p key={i} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: {entry.value.toFixed(2)}
+              {entry.name}: {entry.value.toFixed(2)}s
             </p>
           ))}
         </div>
@@ -93,7 +93,7 @@ export default function ReportViewer({ report, onReset }: ReportViewerProps) {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-semibold text-white">Load Test Results</h2>
-          <p className="text-sm text-gray-400">Duration: {testDuration.toFixed(1)}s</p>
+          <p className="text-sm text-gray-400">Duration: {testDuration.toFixed(1)}min</p>
         </div>
         <button
           onClick={onReset}

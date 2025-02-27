@@ -94,7 +94,7 @@ export default function Home() {
   return (
     <main className="min-h-screen flex">
       {/* Sidebar */}
-      <div className="w-64 bg-[#1a1a1a] border-r border-[#242424] p-4 flex flex-col">
+      <div className="w-64 bg-[#242424] border-r border-[#333333] p-4 flex flex-col rounded-lg">
         <h2 className="text-lg font-semibold text-white mb-4">Saved Reports</h2>
         
         <label className="flex items-center justify-center w-full p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg cursor-pointer mb-4 transition-colors">
